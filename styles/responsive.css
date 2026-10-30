@@ -237,9 +237,6 @@
     font-size: 11px;
     min-height: 80px;
   }
-  .card-action {
-    font-size: 10px;
-  }
   .service-icon {
     width: 41px;
     height: 41px;
@@ -276,10 +273,6 @@
   }
   .help-banner p {
     font-size: 10px;
-  }
-  .help-banner .secondary {
-    font-size: 10px;
-    padding: 10px;
   }
   .help-icon {
     flex-shrink: 0;
@@ -488,10 +481,6 @@
     font-size: 12px;
     margin-bottom: 17px;
   }
-  .card-action {
-    font-size: 11px;
-    padding-top: 14px;
-  }
   .steps-section {
     display: block;
     padding-top: 35px;
@@ -519,10 +508,6 @@
   }
   .help-banner p {
     font-size: 11px;
-  }
-  .help-banner .secondary {
-    margin: 12px 0 0 45px;
-    padding: 10px 15px;
   }
   .footer-inner {
     align-items: flex-start;

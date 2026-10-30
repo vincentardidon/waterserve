@@ -1,8 +1,6 @@
 "use client";
 import {
   Droplets,
-  ArrowRight,
-  ArrowUpRight,
   CheckCircle2,
   ClipboardList,
   Search,
@@ -10,9 +8,7 @@ import {
   ShieldCheck,
   Activity,
 } from "lucide-react";
-import type { WaterServeController } from "../../hooks/useWaterServe";
-type Props = Pick<WaterServeController, "setPhoto" | "navigateTo">;
-export function HomePage({ setPhoto, navigateTo }: Props) {
+export function HomePage() {
   return (
     <>
       <section className="hero">
@@ -32,22 +28,6 @@ export function HomePage({ setPhoto, navigateTo }: Props) {
               <br className="desktop" />
               Tell us what’s happening. We’ll help get it flowing again.
             </p>
-            <div className="hero-buttons">
-              <button
-                className="primary"
-                onClick={() => {
-                  setPhoto("");
-                  navigateTo("report");
-                }}
-              >
-                Report a water issue
-                <ArrowUpRight size={18} />
-              </button>
-              <button className="secondary" onClick={() => navigateTo("track")}>
-                Track your report
-                <ArrowRight size={18} />
-              </button>
-            </div>
             <div className="hero-trust">
               <ShieldCheck size={17} />
               <span>No registration needed</span>
@@ -115,42 +95,31 @@ export function HomePage({ setPhoto, navigateTo }: Props) {
               icon: Droplets,
               title: "Report an issue",
               text: "Let us know about leaks, broken pipes, or changes in your water supply.",
-              action: "Submit a report",
-              page: "report",
               cls: "blue-card",
             },
             {
               icon: Search,
               title: "Track a report",
               text: "Use your tracking code to see the latest updates and repair progress.",
-              action: "Check report status",
-              page: "track",
               cls: "",
             },
             {
               icon: ClipboardList,
               title: "Your reports, together",
               text: "Revisit the reports saved on this device and stay up to date.",
-              action: "View my reports",
-              page: "myreports",
               cls: "",
             },
           ].map((c) => (
-            <button
+            <div
               className={"service-card " + c.cls}
               key={c.title}
-              onClick={() => navigateTo(c.page)}
             >
               <span className="service-icon">
                 <c.icon size={26} />
               </span>
               <h3>{c.title}</h3>
               <p>{c.text}</p>
-              <span className="card-action">
-                {c.action}
-                <ArrowRight size={18} />
-              </span>
-            </button>
+            </div>
           ))}
         </div>
       </section>
@@ -163,10 +132,6 @@ export function HomePage({ setPhoto, navigateTo }: Props) {
             <br />
             You can check in at any time.
           </p>
-          <button className="text-button" onClick={() => navigateTo("track")}>
-            Follow your report
-            <ArrowRight size={16} />
-          </button>
         </div>
         <div className="steps">
           {[
@@ -204,10 +169,6 @@ export function HomePage({ setPhoto, navigateTo }: Props) {
             faster.
           </p>
         </div>
-        <button className="secondary" onClick={() => navigateTo("report")}>
-          Make a report
-          <ArrowUpRight size={18} />
-        </button>
       </section>
     </>
   );

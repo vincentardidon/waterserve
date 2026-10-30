@@ -24,8 +24,15 @@ export default function WaterServePage() {
   const { page, user, ready, error, setError, toast, selected } = controller;
   return (
     <div className={user ? "app staff-app" : "app"}>
+      <div className="water-droplets" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+        <span />
+        <span />
+      </div>
       <SiteHeader {...controller} />
-      {!user && page === "home" && <HomePage {...controller} />}
+      {!user && page === "home" && <HomePage />}
       <main className={page === "home" && !user ? "hidden" : "main section"}>
         {error && (
           <div role="alert" className="error-banner">
