@@ -90,7 +90,8 @@ header {
   height: 91px;
   border-bottom: 1px solid var(--line);
   background: #fff;
-  position: relative;
+  position: sticky;
+  top: 0;
   z-index: 10;
 }
 .header-inner {
