@@ -2,9 +2,10 @@
 
 ## Start here
 
-`app/page.tsx` is the application shell. It selects the appropriate screen and places the header, footer, messages, and incident dialog around it. It does not contain the full markup for every screen.
-
-`hooks/useWaterServe.ts` coordinates navigation, form actions, session state, report polling, and browser-saved tracking codes. View components receive only the fields and actions they use through typed props.
+`app/page.tsx` composes the customer and staff screens. `hooks/useWaterServe.ts`
+owns navigation, UI state, and actions. `lib/prototype-store.ts` is the
+prototype's persistence layer: it reads and writes reports and staff data in
+the current browser's local storage.
 
 ## Folder map
 
@@ -12,57 +13,49 @@
 | --- | --- |
 | `app/page.tsx` | Application shell and screen selection |
 | `app/layout.tsx` | Document layout and page metadata |
-| `app/api/[...path]/route.ts` | API routing, request parsing, and common error responses |
 | `components/resident/` | Home, reporting, tracking, saved reports, and notifications |
-| `components/auth/` | Staff login and first administrator setup screens |
-| `components/staff/` | Dashboard, incident list, customer directory, staff management, and account settings |
-| `components/incidents/` | Reusable incident table and incident details dialog |
+| `components/auth/` | Staff login and first administrator setup |
+| `components/staff/` | Dashboard, incidents, customers, staff management, and settings |
+| `components/incidents/` | Incident table and details dialog |
 | `components/layout/` | Site header and footer |
-| `components/shared/` | Status badge, empty-state message, and photo input |
-| `hooks/useWaterServe.ts` | State and application actions used by the screens |
-| `lib/api-client.ts` | Browser HTTP requests and server error messages |
+| `components/shared/` | Status badge and empty state |
+| `hooks/useWaterServe.ts` | UI state and actions |
+| `lib/prototype-store.ts` | Local-storage persistence and prototype workflows |
 | `lib/constants.ts` | Issue types, report statuses, and date formatting |
-| `lib/types.ts` | Staff, incident, history, and tracking data definitions |
+| `lib/types.ts` | Staff, incident, history, and tracking data types |
 | `lib/export-incidents.ts` | CSV download formatting |
-| `lib/server/authentication.ts` | Setup, sign-in, sign-out, session information, and password changes |
-| `lib/server/incidents.ts` | Submission, public tracking, report lists, and workflow updates |
-| `lib/server/staff.ts` | Staff listing and account creation |
-| `lib/server/images.ts` | Authorized access to uploaded photos |
-| `lib/server/helpers.ts` | Validation, response formatting, password hashing, sessions, limits, and photo storage |
-| `lib/server/request-context.ts` | Shared values passed from the router to a feature handler |
 | `styles/` | Styles grouped by screen purpose and responsive breakpoints |
-| `db/` | Database schema and connection helper |
-| `drizzle/` | Existing SQL migration and migration metadata |
-| `scripts/` | Local setup, environment configuration, and development/build commands |
-| `worker/` | Server entry point |
-| `public/` | Static assets |
 
-## Follow a resident report through the code
+## Resident report flow
 
 1. `ReportIssuePage` renders the form.
-2. `submitReport` in `useWaterServe` gathers the form values and calls `apiRequest`.
-3. The API route selects `submitIncident` in `lib/server/incidents.ts`.
-4. The handler validates the input, stores the record and optional photo, and returns the tracking code.
-5. The controller remembers the code on this browser and displays `ReportConfirmationPage`.
-6. `TrackReportPage` displays the public status and history returned by the tracking endpoint.
+2. `submitReport` in `useWaterServe` validates and submits its fields to
+   `prototypeRequest`.
+3. `lib/prototype-store.ts` creates a tracking code and persists the report in
+   local storage.
+4. The controller remembers the tracking code and displays confirmation.
+5. `TrackReportPage` reads the saved report and its public history.
 
-Staff updates use the same path through the controller and API router. The server checks roles and assignments; hiding a button is not treated as authorization.
+Admin and maintenance actions use the same local store. This is suitable only
+for demonstrations: all data and role checks are client-side and can be changed
+by anyone with access to the browser.
 
-## Where to make common changes
+## Common changes
 
-- Change a screen's wording or layout: edit that screen under `components/`.
-- Change status colors: edit `styles/resident.css`, where badge styles are defined.
-- Change the mobile layout: edit `styles/responsive.css`.
+- Change screen wording or layout: edit the relevant component under `components/`.
+- Change status colors: edit `styles/resident.css`.
+- Change mobile layout: edit `styles/responsive.css`.
 - Change CSV columns: edit `lib/export-incidents.ts`.
-- Change an action or navigation behavior: edit `hooks/useWaterServe.ts`.
-- Change a server operation: edit the matching file under `lib/server/`.
-- Change issue types: keep `lib/constants.ts` and submission validation in `lib/server/incidents.ts` consistent.
+- Change actions or navigation: edit `hooks/useWaterServe.ts`.
+- Change local data validation or persistence: edit `lib/prototype-store.ts`.
+- Change issue types: update `lib/constants.ts`.
 
-## Use this update with your working project
+## Data behavior
 
-Stop the development server before copying the updated source files into your existing project folder. Keep your existing `.wrangler/` directory and `.dev.vars` file: they contain the local records, uploads, and setup configuration. The source ZIP does not contain or replace these files.
-
-If dependencies are already installed, run `npm run dev` after copying the source. There is no need to run setup again for this organization update.
+The prototype starts with no sample data. Reports and accounts are saved in
+local storage for the current site origin and browser. Local and deployed
+versions do not share data. Do not enter real personal information or reuse
+real passwords.
 
 ## Code checks
 
@@ -71,6 +64,5 @@ npm run typecheck
 npm run build
 ```
 
-These commands check source types and compilation. They do not run database workflow tests or migrations.
-
-Formatting uses two spaces, semicolons, and double quotes. `.prettierrc.json` and `.prettierignore` document the formatting rules and excluded generated files.
+Formatting uses two spaces, semicolons, and double quotes. See
+`.prettierrc.json` for the project formatting settings.

@@ -1,6 +1,8 @@
 "use client";
+import { useState } from "react";
 import { ArrowRight, Users, Wrench, ShieldCheck, Lock } from "lucide-react";
 import type { WaterServeController } from "../../hooks/useWaterServe";
+import { PasswordInput } from "../shared/PasswordInput";
 type Props = Pick<
   WaterServeController,
   "needsSetup" | "ready" | "busy" | "role" | "setRole" | "navigateTo" | "login"
@@ -14,6 +16,8 @@ export function StaffLoginPage({
   navigateTo,
   login,
 }: Props) {
+  const [showRecoveryHelp, setShowRecoveryHelp] = useState(false);
+
   return (
     <div className="auth-layout">
       <div className="auth-intro">
@@ -29,9 +33,9 @@ export function StaffLoginPage({
         <div className="auth-feature">
           <ShieldCheck />
           <span>
-            Secure, role-based access
+            Role-based workspace preview
             <br />
-            <small>For authorized administrative and maintenance staff.</small>
+            <small>For administrator and maintenance demos.</small>
           </span>
         </div>
       </div>
@@ -69,15 +73,29 @@ export function StaffLoginPage({
             placeholder="you@example.com"
           />
         </label>
-        <label>
-          Password
-          <input
-            type="password"
-            name="password"
-            required
-            autoComplete="current-password"
-          />
-        </label>
+        <PasswordInput
+          label="Password"
+          name="password"
+          required
+          autoComplete="current-password"
+        />
+        <div className="recovery-prompt">
+          <button
+            type="button"
+            className="text-button"
+            aria-expanded={showRecoveryHelp}
+            onClick={() => setShowRecoveryHelp((current) => !current)}
+          >
+            Forgot password?
+          </button>
+        </div>
+        {showRecoveryHelp && (
+          <p className="recovery-help" role="status">
+            Email recovery is not available in this browser-only prototype. If
+            you are maintenance staff, ask the administrator to set a new
+            password for your account in Staff &amp; access.
+          </p>
+        )}
         <button className="primary" disabled={busy || !ready}>
           {busy ? "Signing in…" : "Sign in"}
           <ArrowRight size={18} />
@@ -96,6 +114,10 @@ export function StaffLoginPage({
         )}
         <small className="muted">
           Residents can report and track issues without signing in.
+        </small>
+        <small className="muted">
+          Prototype mode: reports and accounts stay in this browser and are not
+          shared between devices.
         </small>
       </form>
     </div>

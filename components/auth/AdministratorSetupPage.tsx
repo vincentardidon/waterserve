@@ -1,6 +1,7 @@
 "use client";
 import { ArrowRight } from "lucide-react";
 import type { WaterServeController } from "../../hooks/useWaterServe";
+import { PasswordInput } from "../shared/PasswordInput";
 type Props = Pick<WaterServeController, "busy" | "setup">;
 export function AdministratorSetupPage({ busy, setup }: Props) {
   return (
@@ -8,13 +9,9 @@ export function AdministratorSetupPage({ busy, setup }: Props) {
       <div className="eyebrow blue">FIRST-TIME SETUP</div>
       <h2>Create your administrator.</h2>
       <p>
-        Use the private setup key provided with this website. Setup is available
-        only before the first account exists.
+        This prototype saves accounts in this browser only. Setup is available
+        until the first administrator account is created.
       </p>
-      <label>
-        Setup key
-        <input name="key" type="password" required autoComplete="off" />
-      </label>
       <label>
         Full name
         <input name="name" required minLength={2} maxLength={100} />
@@ -23,18 +20,15 @@ export function AdministratorSetupPage({ busy, setup }: Props) {
         Email address
         <input name="email" type="email" required />
       </label>
-      <label>
-        Password
-        <input
-          name="password"
-          type="password"
-          required
-          minLength={12}
-          maxLength={128}
-          autoComplete="new-password"
-        />
-        <small>At least 12 characters.</small>
-      </label>
+      <PasswordInput
+        label="Password"
+        name="password"
+        required
+        minLength={12}
+        maxLength={128}
+        autoComplete="new-password"
+        helper={<small>At least 12 characters.</small>}
+      />
       <button className="primary" disabled={busy}>
         {busy ? "Creating…" : "Create administrator"}
         <ArrowRight size={18} />

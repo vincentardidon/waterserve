@@ -43,7 +43,7 @@ export default function WaterServePage() {
             </button>
           </div>
         )}
-        {!ready && <p className="loading">Connecting to WaterServe…</p>}
+        {!ready && <p className="loading">Loading your local data…</p>}
         {!user && page === "report" && <ReportIssuePage {...controller} />}
         {!user && page === "confirmation" && (
           <ReportConfirmationPage {...controller} />

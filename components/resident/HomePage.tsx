@@ -137,7 +137,7 @@ export function HomePage() {
           {[
             {
               title: "Tell us what’s wrong",
-              text: "Share the issue, location, and a photo if you have one.",
+              text: "Share the issue and location so our staff can help.",
             },
             {
               title: "We get the right team on it",

@@ -116,7 +116,7 @@ export function TrackReportPage({
           <div className="panel-bottom">
             <span>
               <RefreshCw size={14} />
-              Refreshes every 30 seconds while open
+              Updates appear when this report changes in this browser
             </span>
             <button
               className="text-button"

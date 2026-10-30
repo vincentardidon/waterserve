@@ -149,10 +149,9 @@ export function DashboardPage({
       <div className="dashboard-note">
         <ShieldCheck size={17} />
         <p>
-          Updates are saved to the shared database. Residents can follow
+          Updates are saved in this browser. Residents can follow
           progress with their tracking code.
         </p>
-        <span>Refreshes every 30 seconds</span>
       </div>
     </>
   );

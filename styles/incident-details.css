@@ -71,15 +71,6 @@
 .modal-body > h3 {
   font-size: 16px;
 }
-.incident-photo {
-  display: block;
-  width: 100%;
-  max-height: 330px;
-  object-fit: contain;
-  background: #f2f7fa;
-  border-radius: 7px;
-  margin: 20px 0;
-}
 .action-box {
   background: #f0f8fc;
   border: 1px solid #d9eaf5;

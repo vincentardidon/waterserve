@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 import { formatTimestamp } from "../../lib/constants";
 import { StatusBadge } from "../../components/shared/StatusBadge";
-import { PhotoInput } from "../../components/shared/PhotoInput";
 import type { WaterServeController } from "../../hooks/useWaterServe";
 type Props = Pick<
   WaterServeController,
@@ -18,8 +17,6 @@ type Props = Pick<
   | "error"
   | "setError"
   | "staff"
-  | "photo"
-  | "setPhoto"
   | "selected"
   | "setSelected"
   | "updateIncident"
@@ -30,8 +27,6 @@ export function IncidentDetailsModal({
   error,
   setError,
   staff,
-  photo,
-  setPhoto,
   selected,
   setSelected,
   updateIncident,
@@ -103,19 +98,6 @@ export function IncidentDetailsModal({
           </div>
           <h3>Issue description</h3>
           <p className="description">{selected.description}</p>
-          {selected.photo && (
-            <a
-              href={"/api/image?id=" + selected.id}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <img
-                className="incident-photo"
-                src={"/api/image?id=" + selected.id}
-                alt="Resident's photo of the water issue"
-              />
-            </a>
-          )}
           {user.role === "admin" &&
             ["Submitted", "Assigned"].includes(selected.status) && (
               <form
@@ -194,7 +176,6 @@ export function IncidentDetailsModal({
                 updateIncident({
                   action: "resolve",
                   notes: f.get("notes"),
-                  photo,
                 });
               }}
             >
@@ -214,25 +195,11 @@ export function IncidentDetailsModal({
                   placeholder="Describe the repair and outcome…"
                 />
               </label>
-              <PhotoInput
-                onChange={setPhoto}
-                label="Completion photo (optional)"
-              />
               <button className="primary" disabled={busy}>
                 Mark as resolved
                 <CheckCircle2 size={17} />
               </button>
             </form>
-          )}
-          {selected.completion && (
-            <>
-              <h3>Completion photo</h3>
-              <img
-                className="incident-photo"
-                src={"/api/image?id=" + selected.id + "&kind=completion"}
-                alt="Completed repair"
-              />
-            </>
           )}
           <h3 className="history-title">Activity history</h3>
           <div className="timeline">

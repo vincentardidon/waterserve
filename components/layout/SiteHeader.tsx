@@ -8,7 +8,7 @@ import {
   Bell,
   Lock,
 } from "lucide-react";
-import { apiRequest } from "../../lib/api-client";
+import { prototypeRequest } from "../../lib/prototype-store";
 import type { WaterServeController } from "../../hooks/useWaterServe";
 type Props = Pick<
   WaterServeController,
@@ -100,7 +100,7 @@ export function SiteHeader({
                 aria-label="Sign out"
                 onClick={() =>
                   performAction(async () => {
-                    await apiRequest("logout", {});
+                    await prototypeRequest("logout", {});
                     setUser(null);
                     setReports([]);
                     navigateTo("home");
@@ -125,4 +125,3 @@ export function SiteHeader({
     </header>
   );
 }
-

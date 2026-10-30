@@ -1,19 +1,75 @@
 "use client";
+import { useEffect, useRef } from "react";
 import { ArrowRight, ClipboardList, ShieldCheck, Lock } from "lucide-react";
 import { ISSUE_TYPES } from "../../lib/constants";
-import { PhotoInput } from "../../components/shared/PhotoInput";
+import {
+  clearReportDraft,
+  readReportDraft,
+  saveReportDraft,
+} from "../../lib/prototype-store";
 import type { WaterServeController } from "../../hooks/useWaterServe";
-type Props = Pick<WaterServeController, "busy" | "setPhoto" | "submitReport">;
-export function ReportIssuePage({ busy, setPhoto, submitReport }: Props) {
+type Props = Pick<WaterServeController, "busy" | "setError" | "submitReport">;
+export function ReportIssuePage({ busy, setError, submitReport }: Props) {
+  const formRef = useRef<HTMLFormElement>(null);
+
+  useEffect(() => {
+    try {
+      const draft = readReportDraft();
+      const form = formRef.current;
+      if (!form) return;
+      for (const [name, value] of Object.entries(draft)) {
+        const field = form.elements.namedItem(name);
+        if (field instanceof HTMLInputElement && field.type === "checkbox")
+          field.checked = value === true;
+        else if (
+          field instanceof HTMLInputElement ||
+          field instanceof HTMLTextAreaElement ||
+          field instanceof HTMLSelectElement
+        )
+          field.value = typeof value === "string" ? value : "";
+      }
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : "Unable to load the report draft.",
+      );
+    }
+  }, [setError]);
+
   return (
     <>
       <div className="page-heading">
         <div className="eyebrow blue">RESIDENT SERVICES / NEW REPORT</div>
         <h1>Let’s get it flowing again.</h1>
-        <p>Tell us about the problem. No account needed.</p>
+        <p>
+          Tell us about the problem. Your draft saves in this browser as you
+          type.
+        </p>
       </div>
       <div className="form-layout">
-        <form className="panel report-form" onSubmit={submitReport}>
+        <form
+          ref={formRef}
+          className="panel report-form"
+          onSubmit={submitReport}
+          onChange={(event) => {
+            const form = event.currentTarget;
+            const draft: Record<string, string | boolean> = {};
+            for (const [name, value] of new FormData(form))
+              draft[name] =
+                name === "consent" ? true : String(value);
+            draft.consent = (
+              form.elements.namedItem("consent") as HTMLInputElement
+            ).checked;
+            try {
+              saveReportDraft(draft);
+            } catch (error) {
+              setError(
+                error instanceof Error
+                  ? error.message
+                  : "Unable to save the report draft.",
+              );
+            }
+          }}
+        >
           <div className="form-section-title">
             <span>01</span>
             <div>
@@ -104,18 +160,17 @@ export function ReportIssuePage({ busy, setPhoto, submitReport }: Props) {
               placeholder="What is happening? When did it start? Include details that will help our team."
             />
           </label>
-          <PhotoInput onChange={setPhoto} />
           <label className="checkbox">
             <input type="checkbox" name="consent" required />
             <span>
-              I agree that my contact details, address, and attachments may be
-              used by authorized staff to assess and resolve this incident.
+              I agree that my contact details and address may be used by
+              authorized staff to assess and resolve this incident.
             </span>
           </label>
           <div className="form-footer">
             <span>
               <ShieldCheck size={16} />
-              Your details are shared only with authorized staff.
+              Your details are saved in this browser for this prototype.
             </span>
             <button className="primary" disabled={busy}>
               {busy ? "Submitting…" : "Submit report"}

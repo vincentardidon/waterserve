@@ -34,8 +34,6 @@ export interface IncidentReport extends PublicReport {
   address: string;
   account?: string;
   assigned: string | null;
-  photo?: string | null;
-  completion?: string | null;
   history: ReportHistoryEntry[];
 }
 

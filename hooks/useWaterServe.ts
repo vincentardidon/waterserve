@@ -7,7 +7,10 @@ import type {
 } from "../lib/types";
 import { useEffect, useState, type FormEvent } from "react";
 import { exportIncidentCsv } from "../lib/export-incidents";
-import { apiRequest } from "../lib/api-client";
+import {
+  clearReportDraft,
+  prototypeRequest,
+} from "../lib/prototype-store";
 import { REPORT_STATUSES } from "../lib/constants";
 /** Coordinates navigation, form actions, polling, and browser preferences. */
 export function useWaterServe() {
@@ -28,7 +31,6 @@ export function useWaterServe() {
   const [tracked, setTracked] = useState<TrackingResult | null>(null);
   const [code, setCode] = useState("");
   const [success, setSuccess] = useState("");
-  const [photo, setPhoto] = useState("");
   const [selected, setSelected] = useState<IncidentReport | null>(null);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("All statuses");
@@ -47,18 +49,25 @@ export function useWaterServe() {
     setFilter("All statuses");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-  // Retrieve server state without putting data access in view components.
+  // Load browser-local prototype state without putting storage access in views.
   async function loadSession() {
-    const s = await apiRequest("session");
-    setUser(s.user);
+    const s = await prototypeRequest("session");
+    setUser((current) =>
+      current?.id === s.user?.id &&
+      current?.name === s.user?.name &&
+      current?.email === s.user?.email &&
+      current?.role === s.user?.role
+        ? current
+        : s.user,
+    );
     setNeedsSetup(s.needsSetup);
     return s;
   }
   async function loadWorkspace() {
     try {
       const [r, s] = await Promise.all([
-        apiRequest("reports"),
-        apiRequest("staff"),
+        prototypeRequest("reports"),
+        prototypeRequest("staff"),
       ]);
       setReports(r);
       setStaff(s);
@@ -85,17 +94,48 @@ export function useWaterServe() {
       .finally(() => setReady(true));
   }, []);
   useEffect(() => {
+    const refreshSession = () => {
+      loadSession()
+        .then((session) => {
+          if (session.user?.id !== user?.id) {
+            setUser(session.user);
+            setPage(session.user ? "dashboard" : "home");
+          }
+        })
+        .catch((e) => setError(e.message));
+    };
+    window.addEventListener("storage", refreshSession);
+    window.addEventListener("waterserve:storage-change", refreshSession);
+    return () => {
+      window.removeEventListener("storage", refreshSession);
+      window.removeEventListener("waterserve:storage-change", refreshSession);
+    };
+  }, [user]);
+  useEffect(() => {
     if (!user) return;
-    loadWorkspace().catch((e) => setError(e.message));
-    const t = setInterval(() => loadWorkspace().catch(() => {}), 30000);
-    return () => clearInterval(t);
+    const refresh = () =>
+      loadSession()
+        .then((session) => {
+          if (session.user?.id === user.id)
+            return loadWorkspace().catch((e) => setError(e.message));
+        })
+        .catch((e) => setError(e.message));
+    refresh();
+    window.addEventListener("storage", refresh);
+    window.addEventListener("waterserve:storage-change", refresh);
+    return () => {
+      window.removeEventListener("storage", refresh);
+      window.removeEventListener("waterserve:storage-change", refresh);
+    };
   }, [user]);
   useEffect(() => {
     if (!saved.length) return;
     let active = true;
     const check = async () => {
       const result = await Promise.allSettled(
-        saved.map((c) => apiRequest("track?code=" + encodeURIComponent(c))),
+        saved.map((c) =>
+          prototypeRequest("track?code=" + encodeURIComponent(c)),
+        ),
       );
       if (active)
         setNotifications(
@@ -113,22 +153,30 @@ export function useWaterServe() {
         );
     };
     check();
-    const t = setInterval(check, 60000);
+    window.addEventListener("storage", check);
+    window.addEventListener("waterserve:storage-change", check);
     return () => {
       active = false;
-      clearInterval(t);
+      window.removeEventListener("storage", check);
+      window.removeEventListener("waterserve:storage-change", check);
     };
   }, [saved]);
   useEffect(() => {
     if (!tracked) return;
-    const t = setInterval(
-      () =>
-        apiRequest("track?code=" + tracked.report.code)
-          .then(setTracked)
-          .catch(() => {}),
-      30000,
-    );
-    return () => clearInterval(t);
+    let active = true;
+    const refresh = () =>
+      prototypeRequest("track?code=" + tracked.report.code)
+        .then((result) => {
+          if (active) setTracked(result);
+        })
+        .catch((e) => setError(e.message));
+    window.addEventListener("storage", refresh);
+    window.addEventListener("waterserve:storage-change", refresh);
+    return () => {
+      active = false;
+      window.removeEventListener("storage", refresh);
+      window.removeEventListener("waterserve:storage-change", refresh);
+    };
   }, [tracked?.report?.code]);
   useEffect(() => {
     if (!selected) return;
@@ -192,7 +240,9 @@ export function useWaterServe() {
   }
   async function trackReport(c = code) {
     await performAction(async () => {
-      const r = await apiRequest("track?code=" + encodeURIComponent(c.trim()));
+      const r = await prototypeRequest(
+        "track?code=" + encodeURIComponent(c.trim()),
+      );
       setTracked(r);
       setCode(c.trim().toUpperCase());
       remember(r.report.code);
@@ -204,14 +254,13 @@ export function useWaterServe() {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     await performAction(async () => {
-      const r = await apiRequest("reports", {
+      const r = await prototypeRequest("reports", {
         ...Object.fromEntries(f),
         consent: f.get("consent") === "on",
-        photo,
       });
+      clearReportDraft();
       remember(r.code);
       setSuccess(r.code);
-      setPhoto("");
       navigateTo("confirmation");
     });
   }
@@ -219,7 +268,7 @@ export function useWaterServe() {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     await performAction(async () => {
-      await apiRequest("login", { ...Object.fromEntries(f), role });
+      await prototypeRequest("login", { ...Object.fromEntries(f), role });
       await loadSession();
       navigateTo("dashboard");
     });
@@ -228,7 +277,7 @@ export function useWaterServe() {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     await performAction(async () => {
-      await apiRequest("setup", Object.fromEntries(f));
+      await prototypeRequest("setup", Object.fromEntries(f));
       setNeedsSetup(false);
       showToast("Administrator created. Sign in to continue.");
       navigateTo("login");
@@ -238,10 +287,9 @@ export function useWaterServe() {
     const incident = selected;
     if (!incident) return;
     await performAction(async () => {
-      await apiRequest("reports/" + incident.id, data);
+      await prototypeRequest("reports/" + incident.id, data);
       const r = await loadWorkspace();
       setSelected(r.find((x: any) => x.id === incident.id));
-      setPhoto("");
       showToast("Report updated. The resident can see the new status.");
     });
   }
@@ -279,7 +327,6 @@ export function useWaterServe() {
   }
   function openIncident(report: IncidentReport) {
     setSelected(report);
-    setPhoto("");
     setError("");
   }
   return {
@@ -313,8 +360,6 @@ export function useWaterServe() {
     setCode,
     success,
     setSuccess,
-    photo,
-    setPhoto,
     selected,
     setSelected,
     query,

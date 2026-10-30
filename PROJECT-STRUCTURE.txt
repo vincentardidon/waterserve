@@ -1,4 +1,4 @@
-WaterServe source layout
+WaterServe prototype source layout
 
 Start: app/page.tsx
 Application state and actions: hooks/useWaterServe.ts
@@ -8,13 +8,9 @@ Authentication screens: components/auth/
 Shared interface elements: components/shared/
 Incident table and details: components/incidents/
 Header and footer: components/layout/
-Client requests, constants, types, and CSV export: lib/
-API feature handlers and shared server helpers: lib/server/
+Local prototype persistence: lib/prototype-store.ts
+Types, constants, and CSV export: lib/
 Styles: styles/ (imported by app/globals.css)
-Database schema: db/
-Existing migrations: drizzle/
-Development helpers: scripts/
-Server entry point: worker/index.ts
 
-Read docs/CODE-GUIDE.md for the folder map and report flow.
-Existing database users: keep .wrangler/ and .dev.vars when replacing source files.
+No API or database is used. Reports and staff accounts stay in browser local
+storage and are not shared across browsers or devices.

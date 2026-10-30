@@ -114,44 +114,6 @@ textarea {
   color: #8b9ba6;
   font-weight: 400;
 }
-.upload {
-  position: relative;
-  border: 1px dashed #b7d2e2;
-  border-radius: 6px;
-  min-height: 126px;
-  align-items: center;
-  justify-content: center;
-  background: #f8fbfd;
-  gap: 7px;
-  margin: 0;
-  cursor: pointer;
-  color: #1687b3;
-}
-.upload b {
-  font-size: 12px;
-}
-.upload small {
-  font-size: 10px;
-  color: #8196a5;
-  font-weight: 400;
-}
-.upload input {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  cursor: pointer;
-}
-.photo-preview {
-  display: flex;
-  gap: 20px;
-  align-items: center;
-  margin-top: 12px;
-}
-.photo-preview img {
-  max-height: 100px;
-  max-width: 180px;
-  border-radius: 6px;
-}
 .checkbox {
   flex-direction: row;
   align-items: flex-start;

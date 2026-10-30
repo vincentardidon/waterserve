@@ -82,6 +82,58 @@
   font-size: 11px;
   margin-top: 20px;
 }
+.recovery-prompt {
+  display: flex;
+  justify-content: flex-end;
+  margin: -8px 0 18px;
+}
+.recovery-prompt .text-button,
+.staff-reset-button {
+  font-size: 11px;
+}
+.recovery-help {
+  padding: 11px 12px;
+  border-radius: 5px;
+  background: #eff7fc;
+  color: #426174;
+  font-size: 11px;
+  line-height: 1.6;
+  margin: -8px 0 18px;
+}
+.password-input-wrap {
+  display: block;
+  position: relative;
+}
+.password-input-wrap input {
+  padding-right: 46px;
+}
+.password-visibility {
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  color: #647d8c;
+  background: transparent;
+  transform: translateY(-50%);
+}
+.password-visibility:hover {
+  color: #087fae;
+}
+.password-visibility:focus-visible {
+  outline: 2px solid #0786ce;
+  outline-offset: 1px;
+}
+.staff-reset-form {
+  padding: 14px 18px 4px 58px;
+  border-bottom: 1px solid var(--line);
+}
+.staff-reset-form .secondary {
+  margin: -8px 0 12px;
+}
 .setup-form {
   max-width: 500px;
   margin: 20px auto;

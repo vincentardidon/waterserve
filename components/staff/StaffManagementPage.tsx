@@ -1,7 +1,9 @@
 "use client";
-import { Plus } from "lucide-react";
-import { apiRequest } from "../../lib/api-client";
+import { useState } from "react";
+import { KeyRound, Plus } from "lucide-react";
+import { prototypeRequest } from "../../lib/prototype-store";
 import type { WaterServeController } from "../../hooks/useWaterServe";
+import { PasswordInput } from "../shared/PasswordInput";
 type Props = Pick<
   WaterServeController,
   "busy" | "staff" | "showToast" | "loadWorkspace" | "performAction"
@@ -13,6 +15,8 @@ export function StaffManagementPage({
   loadWorkspace,
   performAction,
 }: Props) {
+  const [resettingStaffId, setResettingStaffId] = useState<string | null>(null);
+
   return (
     <>
       <div className="page-heading">
@@ -29,13 +33,62 @@ export function StaffManagementPage({
             <span className="count">{staff.length} members</span>
           </div>
           {staff.map((s) => (
-            <div className="staff-row" key={s.id}>
-              <span className="avatar">{s.name[0]}</span>
-              <div>
-                <b>{s.name}</b>
-                <small>{s.email}</small>
+            <div key={s.id}>
+              <div className="staff-row">
+                <span className="avatar">{s.name[0]}</span>
+                <div>
+                  <b>{s.name}</b>
+                  <small>{s.email}</small>
+                </div>
+                <span className="staff-role">{s.role}</span>
+                {s.role === "maintenance" && (
+                  <button
+                    className="text-button staff-reset-button"
+                    type="button"
+                    aria-expanded={resettingStaffId === s.id}
+                    onClick={() =>
+                      setResettingStaffId((current) =>
+                        current === s.id ? null : s.id,
+                      )
+                    }
+                  >
+                    Reset password
+                  </button>
+                )}
               </div>
-              <span className="staff-role">{s.role}</span>
+              {resettingStaffId === s.id && (
+                <form
+                  className="staff-reset-form"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const form = e.currentTarget;
+                    const f = new FormData(form);
+                    performAction(async () => {
+                      await prototypeRequest("staff-reset-password", {
+                        staffId: s.id,
+                        password: f.get("password"),
+                      });
+                      form.reset();
+                      setResettingStaffId(null);
+                      showToast("Maintenance password reset.");
+                    });
+                  }}
+                >
+                  <PasswordInput
+                    label={`New password for ${s.name}`}
+                    name="password"
+                    required
+                    minLength={12}
+                    maxLength={128}
+                    autoComplete="new-password"
+                    helper={<small>At least 12 characters.</small>}
+                  />
+                  <button className="secondary" disabled={busy}>
+                    <KeyRound size={16} />
+                    Set new password
+                  </button>
+                </form>
+              )}
             </div>
           ))}
         </div>
@@ -46,7 +99,7 @@ export function StaffManagementPage({
             const form = e.currentTarget;
             const f = new FormData(form);
             performAction(async () => {
-              await apiRequest("staff", Object.fromEntries(f));
+              await prototypeRequest("staff", Object.fromEntries(f));
               await loadWorkspace();
               form.reset();
               showToast("Staff account created.");
@@ -73,18 +126,15 @@ export function StaffManagementPage({
               <option value="admin">Administrator</option>
             </select>
           </label>
-          <label>
-            Initial password
-            <input
-              name="password"
-              type="password"
-              required
-              minLength={12}
-              maxLength={128}
-              autoComplete="new-password"
-            />
-            <small>At least 12 characters</small>
-          </label>
+          <PasswordInput
+            label="Initial password"
+            name="password"
+            required
+            minLength={12}
+            maxLength={128}
+            autoComplete="new-password"
+            helper={<small>At least 12 characters</small>}
+          />
           <button className="primary" disabled={busy}>
             Create account
             <Plus size={17} />

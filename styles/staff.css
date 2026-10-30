@@ -233,6 +233,9 @@ tbody tr:last-child td {
   padding: 22px 24px;
   border-bottom: 1px solid var(--line);
 }
+.staff-reset-button {
+  white-space: nowrap;
+}
 .avatar {
   border-radius: 50%;
   display: grid;

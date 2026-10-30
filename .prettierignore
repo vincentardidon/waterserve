@@ -4,5 +4,4 @@ dist/
 .vinext/
 .next/
 .runtime/
-drizzle/meta/
 package-lock.json
