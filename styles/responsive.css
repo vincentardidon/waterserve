@@ -790,4 +790,7 @@
     scroll-behavior: auto !important;
     transition: none !important;
   }
+  .water-droplets span {
+    animation: none;
+  }
 }
