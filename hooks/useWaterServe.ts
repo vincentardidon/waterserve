@@ -7,26 +7,20 @@ import type {
 } from "../lib/types";
 import { useEffect, useState, type FormEvent } from "react";
 import { exportIncidentCsv } from "../lib/export-incidents";
-import {
-  clearReportDraft,
-  prototypeRequest,
-} from "../lib/prototype-store";
-import { REPORT_STATUSES } from "../lib/constants";
+import { clearReportDraft, waterServeRequest } from "../lib/water-serve-api";
 /** Coordinates navigation, form actions, polling, and browser preferences. */
 export function useWaterServe() {
   // Navigation, sign-in state, and interface feedback.
   const [page, setPage] = useState("home");
   const [user, setUser] = useState<StaffMember | null>(null);
-  const [needsSetup, setNeedsSetup] = useState(false);
   const [ready, setReady] = useState(false);
   const [menu, setMenu] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
-  // Shared reports and browser-local tracking shortcuts.
+  // Reports and tracking updates belonging to the signed-in account.
   const [reports, setReports] = useState<IncidentReport[]>([]);
   const [staff, setStaff] = useState<StaffMember[]>([]);
-  const [saved, setSaved] = useState<string[]>([]);
   const [read, setRead] = useState<string[]>([]);
   const [tracked, setTracked] = useState<TrackingResult | null>(null);
   const [code, setCode] = useState("");
@@ -34,7 +28,6 @@ export function useWaterServe() {
   const [selected, setSelected] = useState<IncidentReport | null>(null);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("All statuses");
-  const [role, setRole] = useState("admin");
   const [notifications, setNotifications] = useState<ReportNotification[]>([]);
   const showToast = (s: string) => {
     setToast(s);
@@ -49,9 +42,9 @@ export function useWaterServe() {
     setFilter("All statuses");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-  // Load browser-local prototype state without putting storage access in views.
+  // Load the signed-in account from the server; its database profile determines the role.
   async function loadSession() {
-    const s = await prototypeRequest("session");
+    const s = await waterServeRequest("session");
     setUser((current) =>
       current?.id === s.user?.id &&
       current?.name === s.user?.name &&
@@ -60,14 +53,13 @@ export function useWaterServe() {
         ? current
         : s.user,
     );
-    setNeedsSetup(s.needsSetup);
     return s;
   }
   async function loadWorkspace() {
     try {
       const [r, s] = await Promise.all([
-        prototypeRequest("reports"),
-        prototypeRequest("staff"),
+        waterServeRequest("reports"),
+        waterServeRequest("staff"),
       ]);
       setReports(r);
       setStaff(s);
@@ -75,7 +67,7 @@ export function useWaterServe() {
     } catch (e: any) {
       if (e.status === 401) {
         setUser(null);
-        setPage("login");
+        setPage("home");
         setSelected(null);
       }
       throw e;
@@ -83,12 +75,12 @@ export function useWaterServe() {
   }
   useEffect(() => {
     try {
-      setSaved(JSON.parse(localStorage.getItem("ws_codes") || "[]"));
       setRead(JSON.parse(localStorage.getItem("ws_read") || "[]"));
     } catch {}
     loadSession()
       .then((s) => {
-        if (s.user) setPage("dashboard");
+        if (s.user) setPage(s.user.role === "customer" ? "myreports" : "dashboard");
+        else setPage("home");
       })
       .catch((e) => setError(e.message))
       .finally(() => setReady(true));
@@ -99,7 +91,7 @@ export function useWaterServe() {
         .then((session) => {
           if (session.user?.id !== user?.id) {
             setUser(session.user);
-            setPage(session.user ? "dashboard" : "home");
+            setPage(session.user ? session.user.role === "customer" ? "myreports" : "dashboard" : "home");
           }
         })
         .catch((e) => setError(e.message));
@@ -123,18 +115,25 @@ export function useWaterServe() {
     refresh();
     window.addEventListener("storage", refresh);
     window.addEventListener("waterserve:storage-change", refresh);
+    const interval = user.role === "customer" ? window.setInterval(refresh, 30000) : undefined;
     return () => {
+      if (interval) window.clearInterval(interval);
       window.removeEventListener("storage", refresh);
       window.removeEventListener("waterserve:storage-change", refresh);
     };
   }, [user]);
   useEffect(() => {
-    if (!saved.length) return;
+    if (!user || user.role !== "customer") {
+      setNotifications([]);
+      return;
+    }
+    const codes = [...new Set(reports.map((report) => report.code))];
+    if (!codes.length) { setNotifications([]); return; }
     let active = true;
     const check = async () => {
       const result = await Promise.allSettled(
-        saved.map((c) =>
-          prototypeRequest("track?code=" + encodeURIComponent(c)),
+        codes.map((c) =>
+          waterServeRequest("track?code=" + encodeURIComponent(c)),
         ),
       );
       if (active)
@@ -160,19 +159,21 @@ export function useWaterServe() {
       window.removeEventListener("storage", check);
       window.removeEventListener("waterserve:storage-change", check);
     };
-  }, [saved]);
+  }, [user, reports]);
   useEffect(() => {
     if (!tracked) return;
     let active = true;
     const refresh = () =>
-      prototypeRequest("track?code=" + tracked.report.code)
+      waterServeRequest("track?code=" + tracked.report.code)
         .then((result) => {
           if (active) setTracked(result);
         })
         .catch((e) => setError(e.message));
     window.addEventListener("storage", refresh);
     window.addEventListener("waterserve:storage-change", refresh);
+    const interval = window.setInterval(refresh, 30000);
     return () => {
+      window.clearInterval(interval);
       active = false;
       window.removeEventListener("storage", refresh);
       window.removeEventListener("waterserve:storage-change", refresh);
@@ -233,19 +234,13 @@ export function useWaterServe() {
       setBusy(false);
     }
   }
-  function remember(c: string) {
-    const next = [c, ...saved.filter((s) => s !== c)].slice(0, 50);
-    setSaved(next);
-    localStorage.setItem("ws_codes", JSON.stringify(next));
-  }
   async function trackReport(c = code) {
     await performAction(async () => {
-      const r = await prototypeRequest(
+      const r = await waterServeRequest(
         "track?code=" + encodeURIComponent(c.trim()),
       );
       setTracked(r);
       setCode(c.trim().toUpperCase());
-      remember(r.report.code);
       navigateTo("track");
     });
   }
@@ -254,12 +249,12 @@ export function useWaterServe() {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     await performAction(async () => {
-      const r = await prototypeRequest("reports", {
+      const r = await waterServeRequest("reports", {
         ...Object.fromEntries(f),
         consent: f.get("consent") === "on",
       });
       clearReportDraft();
-      remember(r.code);
+      if (user?.role === "customer") await loadWorkspace();
       setSuccess(r.code);
       navigateTo("confirmation");
     });
@@ -268,32 +263,49 @@ export function useWaterServe() {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     await performAction(async () => {
-      await prototypeRequest("login", { ...Object.fromEntries(f), role });
-      await loadSession();
-      navigateTo("dashboard");
+      await waterServeRequest("login", Object.fromEntries(f));
+      const s = await loadSession();
+      navigateTo(s.user?.role === "customer" ? "myreports" : "dashboard");
     });
   }
-  async function setup(e: FormEvent<HTMLFormElement>) {
+  async function signup(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     await performAction(async () => {
-      await prototypeRequest("setup", Object.fromEntries(f));
-      setNeedsSetup(false);
-      showToast("Administrator created. Sign in to continue.");
-      navigateTo("login");
+      const result = await waterServeRequest("signup", Object.fromEntries(f));
+      if (result.confirmationRequired) showToast("Check your email to confirm your account, then sign in.");
+      else {
+        const s = await loadSession();
+        navigateTo(s.user?.role === "customer" ? "myreports" : "dashboard");
+      }
+    });
+  }
+  async function passwordReset(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const f = new FormData(e.currentTarget);
+    await performAction(async () => {
+      await waterServeRequest("password-reset", Object.fromEntries(f));
+      showToast("If an account uses that email, a password reset link is on its way.");
     });
   }
   async function updateIncident(data: any) {
     const incident = selected;
     if (!incident) return;
     await performAction(async () => {
-      await prototypeRequest("reports/" + incident.id, data);
+      await waterServeRequest("reports/" + incident.id, data);
       const r = await loadWorkspace();
       setSelected(r.find((x: any) => x.id === incident.id));
       showToast("Report updated. The resident can see the new status.");
     });
   }
-  const nav = user
+  const nav = user?.role === "customer"
+    ? [
+        ["report", "Report an issue"],
+        ["myreports", "My reports"],
+        ["notifications", "Updates"],
+        ["settings", "Account"],
+      ]
+    : user
     ? [
         ["dashboard", "Overview"],
         [
@@ -308,12 +320,7 @@ export function useWaterServe() {
           : []),
         ["settings", "Account"],
       ]
-    : [
-        ["home", "Home"],
-        ["report", "Report an issue"],
-        ["track", "Track a report"],
-        ["myreports", "My reports"],
-      ];
+    : [["home", "Home"]];
   const unread = notifications.filter((n) => !read.includes(n.id)).length;
   const filtered = reports.filter(
     (r) =>
@@ -334,8 +341,6 @@ export function useWaterServe() {
     setPage,
     user,
     setUser,
-    needsSetup,
-    setNeedsSetup,
     ready,
     setReady,
     menu,
@@ -350,8 +355,6 @@ export function useWaterServe() {
     setReports,
     staff,
     setStaff,
-    saved,
-    setSaved,
     read,
     setRead,
     tracked,
@@ -366,8 +369,6 @@ export function useWaterServe() {
     setQuery,
     filter,
     setFilter,
-    role,
-    setRole,
     notifications,
     setNotifications,
     showToast,
@@ -375,11 +376,11 @@ export function useWaterServe() {
     loadSession,
     loadWorkspace,
     performAction,
-    remember,
     trackReport,
     submitReport,
     login,
-    setup,
+    signup,
+    passwordReset,
     updateIncident,
     nav,
     unread,

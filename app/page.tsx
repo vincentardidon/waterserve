@@ -8,8 +8,7 @@ import { ReportConfirmationPage } from "../components/resident/ReportConfirmatio
 import { TrackReportPage } from "../components/resident/TrackReportPage";
 import { MyReportsPage } from "../components/resident/MyReportsPage";
 import { NotificationsPage } from "../components/resident/NotificationsPage";
-import { StaffLoginPage } from "../components/auth/StaffLoginPage";
-import { AdministratorSetupPage } from "../components/auth/AdministratorSetupPage";
+import { AccountAccessPage } from "../components/auth/AccountAccessPage";
 import { DashboardPage } from "../components/staff/DashboardPage";
 import { IncidentListPage } from "../components/staff/IncidentListPage";
 import { CustomerDirectoryPage } from "../components/staff/CustomerDirectoryPage";
@@ -32,8 +31,8 @@ export default function WaterServePage() {
         <span />
       </div>
       <SiteHeader {...controller} />
-      {!user && page === "home" && <HomePage />}
-      <main className={page === "home" && !user ? "hidden" : "main section"}>
+      {ready && !user && page === "home" && <HomePage />}
+      <main className={ready && !user && page === "home" ? "hidden" : "main section"}>
         {error && (
           <div role="alert" className="error-banner">
             <AlertCircle size={18} />
@@ -43,31 +42,32 @@ export default function WaterServePage() {
             </button>
           </div>
         )}
-        {!ready && <p className="loading">Loading your local data…</p>}
-        {!user && page === "report" && <ReportIssuePage {...controller} />}
-        {!user && page === "confirmation" && (
+        {!ready && <p className="loading">Loading your WaterServe account…</p>}
+        {ready && !user && page === "login" && <AccountAccessPage {...controller} />}
+        {ready && user?.role === "customer" && page === "report" && <ReportIssuePage {...controller} />}
+        {ready && user?.role === "customer" && page === "confirmation" && (
           <ReportConfirmationPage {...controller} />
         )}
-        {!user && page === "track" && <TrackReportPage {...controller} />}
-        {!user && page === "myreports" && <MyReportsPage {...controller} />}
-        {!user && page === "notifications" && (
+        {ready && user?.role === "customer" && page === "track" && <TrackReportPage {...controller} />}
+        {ready && user?.role === "customer" && page === "notifications" && (
           <NotificationsPage {...controller} />
         )}
-        {!user && page === "login" && <StaffLoginPage {...controller} />}
-        {!user && page === "setup" && (
-          <AdministratorSetupPage {...controller} />
+        {ready && user?.role === "customer" && page === "myreports" && (
+          <MyReportsPage {...controller} />
         )}
-        {user && (
+        {ready && user && page !== "home" && (
           <>
             <div className="workspace-label">
               <span className="live-dot" />
-              {user.role === "admin"
+              {user.role === "customer"
+                ? "CUSTOMER ACCOUNT"
+                : user.role === "admin"
                 ? "ADMINISTRATIVE WORKSPACE"
                 : "FIELD MAINTENANCE WORKSPACE"}
               <span>CALBAYOG CITY</span>
             </div>
-            {page === "dashboard" && <DashboardPage {...controller} />}
-            {page === "incidents" && <IncidentListPage {...controller} />}
+            {user.role !== "customer" && page === "dashboard" && <DashboardPage {...controller} />}
+            {user.role !== "customer" && page === "incidents" && <IncidentListPage {...controller} />}
             {page === "customers" && user.role === "admin" && (
               <CustomerDirectoryPage {...controller} />
             )}

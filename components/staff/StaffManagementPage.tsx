@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { KeyRound, Plus } from "lucide-react";
-import { prototypeRequest } from "../../lib/prototype-store";
+import { waterServeRequest } from "../../lib/water-serve-api";
 import type { WaterServeController } from "../../hooks/useWaterServe";
 import { PasswordInput } from "../shared/PasswordInput";
 type Props = Pick<
@@ -64,7 +64,7 @@ export function StaffManagementPage({
                     const form = e.currentTarget;
                     const f = new FormData(form);
                     performAction(async () => {
-                      await prototypeRequest("staff-reset-password", {
+                      await waterServeRequest("staff-reset-password", {
                         staffId: s.id,
                         password: f.get("password"),
                       });
@@ -99,7 +99,7 @@ export function StaffManagementPage({
             const form = e.currentTarget;
             const f = new FormData(form);
             performAction(async () => {
-              await prototypeRequest("staff", Object.fromEntries(f));
+              await waterServeRequest("staff", Object.fromEntries(f));
               await loadWorkspace();
               form.reset();
               showToast("Staff account created.");
@@ -121,10 +121,8 @@ export function StaffManagementPage({
           </label>
           <label>
             Role
-            <select name="role">
-              <option value="maintenance">Maintenance</option>
-              <option value="admin">Administrator</option>
-            </select>
+            <input type="hidden" name="role" value="maintenance" />
+            <div className="muted">Maintenance staff</div>
           </label>
           <PasswordInput
             label="Initial password"

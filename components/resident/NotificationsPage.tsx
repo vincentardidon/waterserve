@@ -19,8 +19,8 @@ export function NotificationsPage({
         <div className="eyebrow blue">STAY IN THE LOOP</div>
         <h1>Report updates</h1>
         <p>
-          In-portal alerts for reports saved on this device. No SMS or email is
-          sent.
+          In-portal alerts for reports linked to your account. Email and SMS
+          alerts are not enabled.
         </p>
       </div>
       <div className="panel notification-list">

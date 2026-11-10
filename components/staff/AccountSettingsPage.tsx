@@ -1,6 +1,6 @@
 "use client";
 import { Lock } from "lucide-react";
-import { prototypeRequest } from "../../lib/prototype-store";
+import { waterServeRequest } from "../../lib/water-serve-api";
 import type { WaterServeController } from "../../hooks/useWaterServe";
 import { PasswordInput } from "../shared/PasswordInput";
 type Props = Pick<
@@ -24,7 +24,7 @@ export function AccountSettingsPage({
         e.preventDefault();
         const f = new FormData(e.currentTarget);
         performAction(async () => {
-          await prototypeRequest("password", Object.fromEntries(f));
+          await waterServeRequest("password", Object.fromEntries(f));
           setUser(null);
           navigateTo("login");
           showToast("Password changed. Please sign in again.");

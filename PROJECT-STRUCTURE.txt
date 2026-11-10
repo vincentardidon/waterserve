@@ -1,16 +1,17 @@
-WaterServe prototype source layout
+WaterServe source layout
 
 Start: app/page.tsx
+API routes: app/api/[...path]/route.ts
+Password reset screen: app/reset-password/page.tsx
 Application state and actions: hooks/useWaterServe.ts
 Resident screens: components/resident/
 Staff screens: components/staff/
-Authentication screens: components/auth/
+Shared sign-in: components/auth/AccountAccessPage.tsx
 Shared interface elements: components/shared/
 Incident table and details: components/incidents/
 Header and footer: components/layout/
-Local prototype persistence: lib/prototype-store.ts
+Supabase clients and session proxy: lib/supabase/
+API client and report draft storage: lib/water-serve-api.ts
+Database schema and policies: supabase/schema.sql
 Types, constants, and CSV export: lib/
 Styles: styles/ (imported by app/globals.css)
-
-No API or database is used. Reports and staff accounts stay in browser local
-storage and are not shared across browsers or devices.

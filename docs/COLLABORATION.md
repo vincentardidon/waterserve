@@ -30,9 +30,9 @@ git push -u origin feature/describe-your-change
 
 Open a pull request and ask a groupmate to review it before merging.
 
-## Prototype data
+## Supabase data
 
-The repository contains source code only. Reports and staff accounts are saved
-in each user's browser local storage and are not shared by GitHub. Cloning the
-repository or opening the deployment on another device does not copy or sync
-prototype data. Do not enter real personal information or production passwords.
+Follow the Supabase setup in the root README before running the website. Keep
+`.env.local` and all Supabase secret keys out of Git. Reports and account roles
+are stored in Supabase, not in the repository. The public publishable key is
+protected by the database's Row Level Security policies.

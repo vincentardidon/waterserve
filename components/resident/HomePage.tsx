@@ -30,7 +30,7 @@ export function HomePage() {
             </p>
             <div className="hero-trust">
               <ShieldCheck size={17} />
-              <span>No registration needed</span>
+              <span>Customer account required</span>
               <i />
               <span>Available 24/7</span>
             </div>
@@ -106,7 +106,7 @@ export function HomePage() {
             {
               icon: ClipboardList,
               title: "Your reports, together",
-              text: "Revisit the reports saved on this device and stay up to date.",
+              text: "Sign in to keep your reports together across your devices.",
               cls: "",
             },
           ].map((c) => (

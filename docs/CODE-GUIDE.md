@@ -2,67 +2,43 @@
 
 ## Start here
 
-`app/page.tsx` composes the customer and staff screens. `hooks/useWaterServe.ts`
-owns navigation, UI state, and actions. `lib/prototype-store.ts` is the
-prototype's persistence layer: it reads and writes reports and staff data in
-the current browser's local storage.
+`app/page.tsx` composes the website screens. `hooks/useWaterServe.ts` owns navigation, UI state, and form actions. `lib/water-serve-api.ts` sends requests to the Next.js API. `app/api/[...path]/route.ts` validates requests, identifies the signed-in account, and talks to Supabase. `supabase/schema.sql` creates the database tables, account-role trigger, access policies, and report workflow functions.
 
 ## Folder map
 
 | Location | Responsibility |
 | --- | --- |
-| `app/page.tsx` | Application shell and screen selection |
+| `app/page.tsx` | Main application shell and screen selection |
 | `app/layout.tsx` | Document layout and page metadata |
-| `components/resident/` | Home, reporting, tracking, saved reports, and notifications |
-| `components/auth/` | Staff login and first administrator setup |
-| `components/staff/` | Dashboard, incidents, customers, staff management, and settings |
-| `components/incidents/` | Incident table and details dialog |
-| `components/layout/` | Site header and footer |
-| `components/shared/` | Status badge and empty state |
-| `hooks/useWaterServe.ts` | UI state and actions |
-| `lib/prototype-store.ts` | Local-storage persistence and prototype workflows |
-| `lib/constants.ts` | Issue types, report statuses, and date formatting |
-| `lib/types.ts` | Staff, incident, history, and tracking data types |
-| `lib/export-incidents.ts` | CSV download formatting |
-| `styles/` | Styles grouped by screen purpose and responsive breakpoints |
+| `app/api/[...path]/route.ts` | Authentication, report, staff, and password API routes |
+| `app/reset-password/page.tsx` | Password reset form |
+| `components/resident/` | Public report, tracking, customer report, and notification screens |
+| `components/auth/AccountAccessPage.tsx` | Shared sign-in, customer sign-up, and reset-email form |
+| `components/staff/` | Admin and maintenance workspaces |
+| `hooks/useWaterServe.ts` | UI actions, navigation, and data refresh |
+| `lib/supabase/` | Server-side Supabase clients and Next.js session proxy |
+| `lib/water-serve-api.ts` | Typed request boundary and report-draft storage |
+| `supabase/schema.sql` | Schema, role defaults, Row Level Security, and database functions |
+| `supabase/fixes/` | SQL patches for projects that already applied an earlier schema version |
 
-## Resident report flow
+## Role and data flow
 
-1. `ReportIssuePage` renders the form.
-2. `submitReport` in `useWaterServe` validates and submits its fields to
-   `prototypeRequest`.
-3. `lib/prototype-store.ts` creates a tracking code and persists the report in
-   local storage.
-4. The controller remembers the tracking code and displays confirmation.
-5. `TrackReportPage` reads the saved report and its public history.
+1. Guests see the shared sign-in and customer sign-up screen. Customer sign-up creates a Supabase Auth user; the database trigger creates a `customer` profile.
+2. The shared sign-in endpoint verifies the credentials, then reads the profile role from Postgres. The UI routes the account based on that role; it never accepts a role choice from the login form.
+3. Signed-in customers submit reports through a validating API route and database function. The database links each report to the customer account.
+4. Customer tracking only returns reports owned by that account. Staff report queries are constrained by Row Level Security.
+5. Assignment and status changes call a database function that checks the actor's profile and work assignment before writing history.
 
-Admin and maintenance actions use the same local store. This is suitable only
-for demonstrations: all data and role checks are client-side and can be changed
-by anyone with access to the browser.
+The first administrator is provisioned manually in Supabase, then promoted with the SQL statement at the bottom of `supabase/schema.sql`. The application does not offer public administrator setup.
 
 ## Common changes
 
-- Change screen wording or layout: edit the relevant component under `components/`.
-- Change status colors: edit `styles/resident.css`.
-- Change mobile layout: edit `styles/responsive.css`.
-- Change CSV columns: edit `lib/export-incidents.ts`.
-- Change actions or navigation: edit `hooks/useWaterServe.ts`.
-- Change local data validation or persistence: edit `lib/prototype-store.ts`.
-- Change issue types: update `lib/constants.ts`.
+- Change screen wording or layout: edit the component under `components/`.
+- Change workflow validation or API response mapping: edit `app/api/[...path]/route.ts` and the matching function in `supabase/schema.sql`.
+- Change issue types: update `lib/constants.ts` and the `create_incident` database function.
+- Change report status transitions: update `update_incident` in `supabase/schema.sql`.
+- Change UI actions or navigation: edit `hooks/useWaterServe.ts`.
 
-## Data behavior
+## Local setup and checks
 
-The prototype starts with no sample data. Reports and accounts are saved in
-local storage for the current site origin and browser. Local and deployed
-versions do not share data. Do not enter real personal information or reuse
-real passwords.
-
-## Code checks
-
-```sh
-npm run typecheck
-npm run build
-```
-
-Formatting uses two spaces, semicolons, and double quotes. See
-`.prettierrc.json` for the project formatting settings.
+Follow the Supabase setup in the root [README](../README.md). Never add the Supabase secret key to browser code or commit `.env.local`. Run `npm run typecheck` and `npm run build` before sharing changes.

@@ -14,6 +14,7 @@ coverage/
 # Local secrets and personal configuration
 .dev.vars*
 .env*
+!.env.example
 *.pem
 *.key
 

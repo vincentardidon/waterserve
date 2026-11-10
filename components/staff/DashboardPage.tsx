@@ -149,7 +149,7 @@ export function DashboardPage({
       <div className="dashboard-note">
         <ShieldCheck size={17} />
         <p>
-          Updates are saved in this browser. Residents can follow
+          Updates are saved to WaterServe. Residents can follow
           progress with their tracking code.
         </p>
       </div>

@@ -1,10 +1,7 @@
 "use client";
 import { ArrowRight, Check, Copy } from "lucide-react";
 import type { WaterServeController } from "../../hooks/useWaterServe";
-type Props = Pick<
-  WaterServeController,
-  "success" | "showToast" | "trackReport"
->;
+type Props = Pick<WaterServeController, "success" | "showToast" | "trackReport">;
 export function ReportConfirmationPage({
   success,
   showToast,
@@ -41,7 +38,7 @@ export function ReportConfirmationPage({
         <ArrowRight size={18} />
       </button>
       <p className="muted">
-        This report has also been saved in My reports on this device.
+        This report is linked to your account and appears in My reports when you sign in.
       </p>
     </div>
   );

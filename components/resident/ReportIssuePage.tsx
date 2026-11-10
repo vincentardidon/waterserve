@@ -6,7 +6,7 @@ import {
   clearReportDraft,
   readReportDraft,
   saveReportDraft,
-} from "../../lib/prototype-store";
+} from "../../lib/water-serve-api";
 import type { WaterServeController } from "../../hooks/useWaterServe";
 type Props = Pick<WaterServeController, "busy" | "setError" | "submitReport">;
 export function ReportIssuePage({ busy, setError, submitReport }: Props) {
@@ -170,7 +170,7 @@ export function ReportIssuePage({ busy, setError, submitReport }: Props) {
           <div className="form-footer">
             <span>
               <ShieldCheck size={16} />
-              Your details are saved in this browser for this prototype.
+              Your details are sent securely to WaterServe so staff can respond.
             </span>
             <button className="primary" disabled={busy}>
               {busy ? "Submitting…" : "Submit report"}
@@ -199,7 +199,7 @@ export function ReportIssuePage({ busy, setError, submitReport }: Props) {
           </div>
           <p className="aside-note">
             <Lock size={15} />
-            Contact information is never shown in public tracking results.
+            Contact details are visible only to authorized staff and your account.
           </p>
         </aside>
       </div>

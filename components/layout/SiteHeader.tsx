@@ -1,14 +1,12 @@
 "use client";
 import {
   Droplets,
-  ArrowUpRight,
   LogOut,
   Menu,
   X,
-  Bell,
-  Lock,
+  UserRound,
 } from "lucide-react";
-import { prototypeRequest } from "../../lib/prototype-store";
+import { waterServeRequest } from "../../lib/water-serve-api";
 import type { WaterServeController } from "../../hooks/useWaterServe";
 type Props = Pick<
   WaterServeController,
@@ -21,7 +19,6 @@ type Props = Pick<
   | "navigateTo"
   | "performAction"
   | "nav"
-  | "unread"
 >;
 export function SiteHeader({
   page,
@@ -33,14 +30,13 @@ export function SiteHeader({
   navigateTo,
   performAction,
   nav,
-  unread,
 }: Props) {
   return (
     <header>
       <div className="header-inner">
         <button
           className="brand"
-          onClick={() => navigateTo(user ? "dashboard" : "home")}
+          onClick={() => navigateTo(user ? user.role === "customer" ? "myreports" : "dashboard" : "home")}
         >
           <span className="brand-icon">
             <Droplets size={26} />
@@ -60,38 +56,26 @@ export function SiteHeader({
               {label}
             </button>
           ))}
-          {/* The desktop staff shortcut is hidden on phone-sized screens. */}
           {!user && (
             <button
               className="mobile-menu mobile-staff-link"
               style={{ alignItems: "center", gap: 8, padding: "13px 0" }}
               onClick={() => navigateTo("login")}
             >
-              <Lock size={16} />
-              Staff portal
+              <UserRound size={16} />
+              Sign in
             </button>
           )}
         </nav>
         <div className="header-actions">
           {!user ? (
-            <>
-              <button
-                className="notification-button"
-                aria-label="Notifications"
-                onClick={() => navigateTo("notifications")}
-              >
-                <Bell size={19} />
-                {unread > 0 && <i>{unread}</i>}
-              </button>
-              <button
-                className="staff-link"
-                onClick={() => navigateTo("login")}
-              >
-                <Lock size={14} />
-                Staff portal
-                <ArrowUpRight size={15} />
-              </button>
-            </>
+            <button
+              className="staff-link"
+              onClick={() => navigateTo("login")}
+            >
+              <UserRound size={14} />
+              Sign in
+            </button>
           ) : (
             <>
               <span className="avatar">{user.name.charAt(0)}</span>
@@ -100,7 +84,7 @@ export function SiteHeader({
                 aria-label="Sign out"
                 onClick={() =>
                   performAction(async () => {
-                    await prototypeRequest("logout", {});
+                    await waterServeRequest("logout", {});
                     setUser(null);
                     setReports([]);
                     navigateTo("home");
